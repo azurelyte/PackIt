@@ -211,7 +211,7 @@ public class PackIt
     [IL2CompilerOptionAttr(IL2CompilerOption.NullChecks, false)]
 #endif
     public byte[] Data { get { return m_Data; } }
-    public uint Cursor { get { return m_Cursor; } }
+    public uint Cursor { get { return m_Cursor; } set { m_Cursor = value; } }
     public int Length { get { return (int)(m_Capacity - m_FingerprintLen); } }
     public uint NumFingerprintBytes { get { return m_FingerprintLen; } }
     public EFingerprintType FingerprintType { get { return (EFingerprintType)m_FingerprintLen; } }
@@ -225,6 +225,7 @@ public class PackIt
         set { m_Data[m_FingerprintLen + i] = value; }
     }
     #endregion
+    #region Constructors
 
     private PackIt()
     {
@@ -299,6 +300,10 @@ public class PackIt
     /// Extracts the FingerPrint from the data buffer. See <seealso cref="GenerateFingerPrint"/>
     /// </summary>
     /// <returns>fingerprint as a ulong. See <see cref="PackIt.FingerprintType"/> to get the fingerprint type.</returns>
+
+    #endregion // End Constructors
+    #region Fingerprint/Basic Class Functions
+
 #if PACKIT_IL2cppOpt
     [IL2CompilerOptionAttr(IL2CompilerOption.NullChecks, false)]
     [IL2CompilerOptionAttr(IL2CompilerOption.ArrayBoundsChecks, false)]
@@ -418,6 +423,10 @@ public class PackIt
     {
         m_Cursor = m_FingerprintLen + (index >= m_Capacity ? m_Capacity - 1 : index);
     }
+
+    #endregion // End Fingerprint/Class Functions
+    #region Variable Length Packing
+
 #if PACKIT_UNMANAGED
     /// <summary>
     /// Unsafely packs an arbitrary unmanged object.
@@ -580,8 +589,63 @@ public class PackIt
         m_Cursor += len;
         return len;
     }
+    /// <summary>
+    /// Packs an ASCII string of no more than 255 characters
+    /// </summary>
+#if PACKIT_IL2cppOpt
+    [IL2CompilerOptionAttr(IL2CompilerOption.NullChecks, false)]
+    [IL2CompilerOptionAttr(IL2CompilerOption.ArrayBoundsChecks, false)]
+#endif
+    public void PackSmallStringASCII(string s)
+    {
+        byte len = s.Length > 255 ? (byte)255 : (byte)s.Length;
+        if (m_Cursor + len + 1 > m_Capacity) return;
+        PackByte(len);
+        foreach (char c in s) m_Data[m_Cursor++] = (byte)c;
+    }
+#if PACKIT_IL2cppOpt
+    [IL2CompilerOptionAttr(IL2CompilerOption.NullChecks, false)]
+    [IL2CompilerOptionAttr(IL2CompilerOption.ArrayBoundsChecks, false)]
+#endif
+    /// <summary>
+    /// Packs an ASCII string of no more than 255 characters
+    /// </summary>
+    public void PackSmallStringASCII(char[] s)
+    {
+        byte len = s.Length > 255 ? (byte)255 : (byte)s.Length;
+        if (m_Cursor + len + 1 > m_Capacity) return;
+        PackByte(len);
+        foreach (char c in s) m_Data[m_Cursor++] = (byte)c;
+    }
+#if PACKIT_IL2cppOpt
+    [IL2CompilerOptionAttr(IL2CompilerOption.NullChecks, false)]
+    [IL2CompilerOptionAttr(IL2CompilerOption.ArrayBoundsChecks, false)]
+#endif
+    public string UnpackSmallStringASCII()
+    {
+        int nBytes = UnpackByte();
+        if (nBytes == 0 || m_Cursor + nBytes > m_Capacity) return string.Empty;
+        char[] charData = new char[nBytes];
+        for (int i = 0; i < nBytes; i++) charData[i] = (char)m_Data[m_Cursor++];
+        return new string(charData);
+    }
+#if PACKIT_IL2cppOpt
+    [IL2CompilerOptionAttr(IL2CompilerOption.NullChecks, false)]
+    [IL2CompilerOptionAttr(IL2CompilerOption.ArrayBoundsChecks, false)]
+#endif
+    public int UnpackSmallStringASCII(char[] s)
+    {
+        byte nBytes = UnpackByte();
+        if (nBytes == 0 || m_Cursor + nBytes > m_Capacity) return 0;
+        uint endCurValue = m_Cursor + (nBytes < s.Length ? (uint)s.Length : nBytes);
+        for (int i = 0; i < nBytes && i < s.Length; i++) s[i] = (char)m_Data[m_Cursor++];
+        m_Cursor = endCurValue;
+        return nBytes;
+    }
 
+    #endregion // End Variable Length Packing
     #region Primitives
+
 #if PACKIT_IL2cppOpt
     [IL2CompilerOptionAttr(IL2CompilerOption.NullChecks, false)]
     [IL2CompilerOptionAttr(IL2CompilerOption.ArrayBoundsChecks, false)]
@@ -1142,7 +1206,6 @@ public class PackIt
     #region Mixed Precision
     /// If you happen to be browsing region by region, then take particular note of this region. This is where most of the use
     /// case specific functions are. Many times I've need either more or less precision with an odd number of bits or variables.
-
 
 #if PACKIT_IL2cppOpt
     [IL2CompilerOptionAttr(IL2CompilerOption.NullChecks, false)]

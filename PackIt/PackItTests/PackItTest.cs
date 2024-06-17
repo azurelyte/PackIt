@@ -58,7 +58,8 @@ public class PackItTest
         public char c;
         public double d;
     }
-    [Test] public void StructTest()
+    [Test]
+    public void StructTest()
     {
         PackIt p = new PackIt(256);
         SampleStruct t = new SampleStruct() { a = 1, b = 2, c = '3', d = 4.4d };
@@ -71,10 +72,11 @@ public class PackItTest
         Assert.AreEqual(t.c, s.c);
         Assert.AreEqual(t.d, s.d);
     }
-    [Test] public void UnmanagedTest()
+    [Test]
+    public void UnmanagedTest()
     {
         PackIt p = new PackIt(64);
-        unsafe 
+        unsafe
         {
             int iVal = 32;
             double dVal = 5.432342d;
@@ -128,7 +130,8 @@ public class PackItTest
     [Test] public void FingerprintTest_B16() => TestFingerprintPrint(44284, PackIt.EFingerprintType.B16, SampleDataBuffer);
     [Test] public void FingerprintTest_B32() => TestFingerprintPrint(1439324008, PackIt.EFingerprintType.B32, SampleDataBuffer);
     [Test] public void FingerprintTest_B64() => TestFingerprintPrint(9859764967531948136, PackIt.EFingerprintType.B64, SampleDataBuffer);
-    [Test] public void ByteArrayTest()
+    [Test]
+    public void ByteArrayTest()
     {
         byte[] barr = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
         System.ReadOnlySpan<byte> rSpan = new System.ReadOnlySpan<byte>(barr, 2, 3);
@@ -146,7 +149,8 @@ public class PackItTest
         AssertArrayMatch(p.UnpackBytes(), new byte[] { 2, 3, 4 });
         AssertArrayMatch(p.UnpackBytes(), new byte[] { 2, 3, 4, 5 });
     }
-    [Test] public void PrimitivesTest()
+    [Test]
+    public void PrimitivesTest()
     {
         PackIt p = new PackIt(256);
         p.PackSByte(sbyte.MinValue);
@@ -214,7 +218,8 @@ public class PackItTest
             Assert.Fail("Expected value <= " + maxAngleDeltaDeg + ", got " + delta);
         }
     }
-    [Test] public void LossyFloatingPointTest()
+    [Test]
+    public void LossyFloatingPointTest()
     {
         const float fMin = -1000;
         const float fMax = 1000;
@@ -257,7 +262,8 @@ public class PackItTest
         AssertAreEqual(515, p.UnpackDouble48(fMin, fMax), dEpsilon48);
         AssertAreEqual(516, p.UnpackDouble56(fMin, fMax), dEpsilon56);
     }
-    [Test] public void UnityTypesTest()
+    [Test]
+    public void UnityTypesTest()
     {
         const float fMin = -1000;
         const float fMax = 1000;
@@ -333,7 +339,8 @@ public class PackItTest
         AssertAreEqual(quat, p.UnpackQuat(), 0);
         Log.Info("PackQuat Passed.");
     }
-    [Test] public void MixedFloatingPointPrecisionTest()
+    [Test]
+    public void MixedFloatingPointPrecisionTest()
     {
         const float fMin = -1000;
         const float fMax = 1000;
@@ -399,6 +406,38 @@ public class PackItTest
                 return;
             }
         }
+    }
+    private static void AssertArrayMatch(string a, string b)
+    {
+        if (a == null || b == null)
+        {
+            Assert.AreEqual(b, a);
+            return;
+        }
+        if (a.Length != b.Length)
+        {
+            Assert.AreEqual(a.Length, b.Length, $"Expected string length {b.Length}, got {a.Length}");
+            return;
+        }
+        AssertArrayMatch(a.ToCharArray(), b.ToCharArray());
+    }
+    [Test]
+    public void StringTest()
+    {
+        PackIt p = new PackIt(1024);
+        string s1 = "Hello World";
+        char[] s2 = s1.ToCharArray();
+        char[] buffer = new char[5];
+        p.PackSmallStringASCII(s1);
+        p.PackSmallStringASCII(s2);
+        p.PackSmallStringASCII(s1);
+        p.PackUShort(ushort.MaxValue);
+        p.SeekToStart();
+        AssertArrayMatch(s1, p.UnpackSmallStringASCII());
+        AssertArrayMatch(s2, p.UnpackSmallStringASCII().ToCharArray());
+        p.UnpackSmallStringASCII(buffer);
+        AssertArrayMatch("Hello".ToCharArray(), buffer);
+        Assert.AreEqual(ushort.MaxValue, p.UnpackUShort());
     }
 }
 #endif
