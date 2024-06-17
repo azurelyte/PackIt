@@ -179,41 +179,6 @@ public class PackIt
 #endif
     }
 #endif
-    private static class Log
-    {
-        const string LOG_STAMP = "[Packit] ";
-        private static string ToMessage(object o)
-        {
-            return LOG_STAMP + (o?.ToString() ?? "NULL");
-        }
-        public static void Info(object o)
-        {
-            string s = ToMessage(o);
-#if PACKIT_UNITY
-            UnityEngine.Debug.Log(s);
-#else
-            System.Console.WriteLine(s);
-#endif
-        }
-        public static void Warning(object o)
-        {
-            string s = ToMessage(o);
-#if PACKIT_UNITY
-            UnityEngine.Debug.LogWarning(s);
-#else
-            System.Console.WriteLine(s);
-#endif
-        }
-        public static void Error(object o)
-        {
-            string s = ToMessage(o);
-#if PACKIT_UNITY
-            UnityEngine.Debug.LogError(s);
-#else
-            System.Console.Error.WriteLine(s);
-#endif
-        }
-    }
     /// <summary>
     /// Enum Type for the size/existance of a fingerprint. 
     /// Corresponding value when cast to an integral value must equal the number of bytes the finger print holds. See also <seealso cref="HasValidFingerprint"/>
