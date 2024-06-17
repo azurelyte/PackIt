@@ -58,8 +58,7 @@ public class PackItTest
         public char c;
         public double d;
     }
-    [Test]
-    public void StructTest()
+    [Test] public void StructTest()
     {
         PackIt p = new PackIt(256);
         SampleStruct t = new SampleStruct() { a = 1, b = 2, c = '3', d = 4.4d };
@@ -71,6 +70,33 @@ public class PackItTest
         Assert.AreEqual(t.b, s.b);
         Assert.AreEqual(t.c, s.c);
         Assert.AreEqual(t.d, s.d);
+    }
+    [Test] public void UnmanagedTest()
+    {
+        PackIt p = new PackIt(64);
+        unsafe 
+        {
+            int iVal = 32;
+            double dVal = 5.432342d;
+            SampleStruct t = new SampleStruct() { a = 1, b = 2, c = '3', d = 4.4d };
+            SampleStruct s = new SampleStruct();
+            p.Pack(&iVal);
+            p.Pack(&dVal);
+            p.Pack(&t);
+            int cur = (int)p.Cursor;
+            p.SeekToStart();
+            int outIVal = 0;
+            double outDVal = 0;
+            p.Unpack(&outIVal);
+            p.Unpack(&outDVal);
+            p.Unpack(&s);
+            Assert.AreEqual(iVal, outIVal);
+            Assert.AreEqual(dVal, outDVal);
+            Assert.AreEqual(t.a, s.a);
+            Assert.AreEqual(t.b, s.b);
+            Assert.AreEqual(t.c, s.c);
+            Assert.AreEqual(t.d, s.d);
+        }
     }
     readonly byte[] SampleDataBuffer = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 4, 8, 16, 32, 64, 128, 255, 127, 63, 31, 15, 7, 3 };
     private static void TestFingerprintPrintIntegrity(PackIt.EFingerprintType type, byte[] data)

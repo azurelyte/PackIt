@@ -245,7 +245,7 @@ public class PackIt
         m_Cursor = m_FingerprintLen;
     }
     /// <summary>
-    /// Create a PackIt object with a buffer of 'capacity'. Optionally, a fingerprint may be provided. (Capacity is increased to accomidate a fingerprint)
+    /// Create a PackIt object with a buffer of 'capacity'. Capacity is increased to accomidate the chosen fingerprint type.
     /// </summary>
     /// <param name="capacity">Number of bytes this PackIt holds at a maximum.</param>
     /// <param name="fingerprintOption">The type of fingerprint to use.</param>
@@ -372,7 +372,7 @@ public class PackIt
                 return 0;
             case EFingerprintType.B8:
                 return fingerprint & byte.MaxValue;
-            case EFingerprintType.B16: // Output print will be expected to fit in 16 bytes. So we will xor each short of the fingerprint.
+            case EFingerprintType.B16:
                 return (fingerprint & ushort.MaxValue);
             case EFingerprintType.B32:
                 return (fingerprint & uint.MaxValue);
